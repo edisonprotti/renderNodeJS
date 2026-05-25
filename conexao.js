@@ -8,7 +8,10 @@ const pool = new Pool({
     password: limparObjeto(process.env.DB_PASSWORD),
     database: limparObjeto(process.env.DB_NAME),
     port: parseInt(process.env.DB_PORT) || 5432,
-    ssl: true // Ativa o SSL padrão exigido pelo PostgreSQL do Render
+    ssl: {
+        // ESSA É A LINHA CHAVE: Avisa o Node para aceitar o certificado autoassinado do Render
+        rejectUnauthorized: false 
+    }
 });
 
 // Evita que o processo do Node morra se houver uma queda de conexão ociosa
