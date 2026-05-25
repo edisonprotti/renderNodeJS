@@ -1,10 +1,11 @@
 const http = require('http');
-const db = require('./conexao'); // Este é o nosso pool do pg
+const db = require('./conexao');
 
 const PORT = process.env.PORT || 3000;
 
 async function prepararBanco() {
     try {
+        // Cria a tabela caso ela não exista
         await db.query(`
             CREATE TABLE IF NOT EXISTS usuarios (
                 id SERIAL PRIMARY KEY,
@@ -22,7 +23,6 @@ async function prepararBanco() {
 const server = http.createServer(async (req, res) => {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
-    // Aceita a raiz '/' ou '/usuarios'
     if (req.url === '/' || req.url === '/usuarios') {
         try {
             const resultado = await db.query('SELECT id, usuario, criado_em FROM usuarios');
@@ -40,7 +40,7 @@ const server = http.createServer(async (req, res) => {
             res.end(JSON.stringify({
                 sucesso: false,
                 erro: "Erro ao consultar tabela integrada.",
-                detalhe: erro.message || erro.code || "Erro de conexão bruto ou credenciais inválidas"
+                detalhe: erro.message || "Erro de conexão ou credenciais inválidas"
             }, null, 2));
         }
     } else {
@@ -53,4 +53,6 @@ prepararBanco().then(() => {
     server.listen(PORT, () => {
         console.log(`🚀 Servidor ativo na porta ${PORT}`);
     });
+}).catch(err => {
+    console.error("❌ Falha crítica na inicialização:", err.message);
 });
