@@ -1,9 +1,8 @@
 const http = require('http');
-const db = require('./conexao');
+const db = require('./conexao'); // Este é o nosso pool do pg
 
 const PORT = process.env.PORT || 3000;
 
-// Garante a existência da estrutura da tabela compartilhada
 async function prepararBanco() {
     try {
         await db.query(`
@@ -14,18 +13,18 @@ async function prepararBanco() {
                 criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
-        console.log("✅ Verificação da tabela 'usuarios' via Node.js concluída.");
+        console.log("✅ Tabela 'usuarios' verificada via Node.js.");
     } catch (error) {
-        console.error("⚠️ Erro ao estruturar banco via Node:", error.message);
+        console.error("⚠️ Erro no boot do banco:", error.message);
     }
 }
 
 const server = http.createServer(async (req, res) => {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
+    // Aceita a raiz '/' ou '/usuarios'
     if (req.url === '/' || req.url === '/usuarios') {
         try {
-            // Faz o SELECT na mesma tabela que o PHP acessa
             const resultado = await db.query('SELECT id, usuario, criado_em FROM usuarios');
             
             res.statusCode = 200;
@@ -41,7 +40,7 @@ const server = http.createServer(async (req, res) => {
             res.end(JSON.stringify({
                 sucesso: false,
                 erro: "Erro ao consultar tabela integrada.",
-                detalhe: erro.message
+                detalhe: erro.message || erro.code || "Erro de conexão bruto ou credenciais inválidas"
             }, null, 2));
         }
     } else {
@@ -52,6 +51,6 @@ const server = http.createServer(async (req, res) => {
 
 prepararBanco().then(() => {
     server.listen(PORT, () => {
-        console.log(`🚀 Servidor Node.js integrado rodando na porta ${PORT}`);
+        console.log(`🚀 Servidor ativo na porta ${PORT}`);
     });
 });
