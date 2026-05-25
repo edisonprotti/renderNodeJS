@@ -11,5 +11,5 @@ const pool = new Pool({
     }
 });
 
-// Exporta o pool diretamente (padrão de mercado mais seguro)
+// Exporta o pool diretamente para o index.js usar
 module.exports = pool;
