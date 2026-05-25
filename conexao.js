@@ -1,6 +1,5 @@
 const { Pool } = require('pg');
 
-// Configuração do pool de conexões utilizando variáveis de ambiente
 const pool = new Pool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -8,8 +7,18 @@ const pool = new Pool({
     database: process.env.DB_NAME,
     port: parseInt(process.env.DB_PORT) || 5432,
     ssl: {
-        rejectUnauthorized: false // Obrigatório para conexões seguras na nuvem (SSL)
-    }
+        rejectUnauthorized: false // Exigido pelo Render para conexões seguras externas
+    },
+    connectionTimeoutMillis: 10000 // Timeout de 10 segundos
 });
 
-module.exports = pool;
+module.exports = {
+    query: async (text, params) => {
+        // Força o bloco a capturar o erro exato de conexão se ele acontecer
+        try {
+            return await pool.query(text, params);
+        } catch (error) {
+            throw new Error(error.message); 
+        }
+    }
+};
