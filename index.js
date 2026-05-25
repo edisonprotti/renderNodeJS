@@ -22,10 +22,8 @@ async function prepararBanco() {
 const server = http.createServer(async (req, res) => {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
-    // Remove espaços, barras duplicadas e normaliza a rota visitada
     const urlLimpa = req.url.split('?')[0].replace(/\/$/, "");
 
-    // Se a rota for vazia "", "/" ou "/usuarios", ele processa a busca
     if (urlLimpa === "" || urlLimpa === "/usuarios" || req.url === "/") {
         try {
             const resultado = await db.query('SELECT id, usuario, criado_em FROM usuarios');
@@ -43,22 +41,18 @@ const server = http.createServer(async (req, res) => {
             res.end(JSON.stringify({
                 sucesso: false,
                 erro: "Erro ao consultar tabela integrada.",
-                detalhe: erro.message
+                // Captura qualquer propriedade de texto do erro do driver pg
+                detalhe: erro.message || erro.stack || JSON.stringify(erro) || "Falha de handshake SSL"
             }, null, 2));
         }
     } else {
-        // Se cair aqui, mostra a rota que o Render tentou acessar para diagnóstico
         res.statusCode = 404;
-        res.end(JSON.stringify({ 
-            erro: "Rota não encontrada", 
-            url_recebida: req.url,
-            url_processada: urlLimpa
-        }, null, 2));
+        res.end(JSON.stringify({ erro: "Rota não encontrada" }));
     }
 });
 
 prepararBanco().then(() => {
     server.listen(PORT, () => {
-        console.log(`🚀 Servidor ativo na porta ${PORT}`);
+        console.log("🚀 Servidor Node ativo.");
     });
 });
